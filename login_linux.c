@@ -23,6 +23,18 @@ void sighandler() {
 	/* see 'man 2 signal' */
 }
 
+// Wrapper around fgets to replace ending \n by \0.
+// From http://stackoverflow.com/a/4309845/2299303
+char *fgets_wrapper(char *buffer, size_t buflen, FILE *fp) {
+	if (fgets(buffer, buflen, fp) != 0) {
+		size_t len = strlen(buffer);
+        if (len > 0 && buffer[len-1] == '\n')
+			buffer[len-1] = '\0';
+        return buffer;
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
 
 	mypwent *passwddata;
@@ -45,8 +57,8 @@ int main(int argc, char *argv[]) {
 		fflush(NULL); /* Flush all  output buffers */
 		__fpurge(stdin); /* Purge any data in stdin buffer */
 
-		if (gets(user) == NULL) /* gets() is vulnerable to buffer */
-			exit(0); /*  overflow attacks.  */
+		if(fgets_wrapper(user, LENGTH, stdin) == 0)
+			exit(0);
 
 		/* check to see if important variable is intact after input of login name - do not remove */
 		printf("Value of variable 'important' after input of login name: %*.*s\n",
