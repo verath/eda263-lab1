@@ -1,5 +1,6 @@
 # Project specific files
 login_linux
+makepass
 
 # Object files
 *.o

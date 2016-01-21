@@ -16,6 +16,7 @@
 #define TRUE 1
 #define FALSE 0
 #define LENGTH 16
+#define MAX_PASS_AGE 10
 
 void sighandler() {
 
@@ -42,9 +43,7 @@ int main(int argc, char *argv[]) {
 	char important[LENGTH] = "***IMPORTANT***";
 
 	char user[LENGTH];
-	//char   *c_pass; //you might want to use this variable later...
-	char prompt[] = "password: ";
-	char *user_pass;
+	char *c_pass;
 
 	sighandler();
 
@@ -64,22 +63,45 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important' after input of login name: %*.*s\n",
 				LENGTH - 1, LENGTH - 1, important);
 
-		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
 
 		if (passwddata != NULL) {
-			/* You have to encrypt user_pass for this to work */
-			/* Don't forget to include the salt */
+			// Ask for password, encrypt with salt
+			c_pass = crypt(getpass("Password: "), passwddata->passwd_salt);
 
-			if (!strcmp(user_pass, passwddata->passwd)) {
-
-				printf(" You're in !\n");
+			if (strcmp(c_pass, passwddata->passwd) == 0) {
+				printf("You're in !\n");
 				printf("Your uid: %d\n", passwddata->uid);
+				printf("Failed attempts: %d\n", passwddata->pwfailed);
+
+				// Password age
+				passwddata->pwage++;
+				if(passwddata->pwage > MAX_PASS_AGE)
+					printf("You should change password!\n");
+
+				// Reset num failed attempts
+				passwddata->pwfailed = 0;
+
+				// Store the updated entry
+				if(mysetpwent(user, passwddata) != 0) {
+					printf("Something went wrong saving passwddata!");
+					return -1;
+				}
 
 				/*  check UID, see setuid(2) */
 				/*  start a shell, use execve(2) */
+
 				return 0;
 
+			} else {
+				// Increase no_of_failed_attempts
+				passwddata->pwfailed++;
+
+				// Store the updated entry
+				if(mysetpwent(user, passwddata) != 0) {
+					printf("Something went wrong saving passwddata!");
+					return -1;
+				}
 			}
 		}
 		printf("Login Incorrect \n");
