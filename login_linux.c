@@ -62,6 +62,7 @@ int main(int argc, char *argv[]) {
 			if (!strcmp(user_pass, passwddata->passwd)) {
 
 				printf(" You're in !\n");
+				printf("Your uid: %d\n", passwddata->uid);
 
 				/*  check UID, see setuid(2) */
 				/*  start a shell, use execve(2) */
