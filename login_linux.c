@@ -20,9 +20,13 @@
 #define MAX_LOGIN_ATTEMPTS 5
 
 void sighandler() {
-
-	/* add signalhandling routines here */
-	/* see 'man 2 signal' */
+	// Catch (some) termination signals
+	signal(SIGHUP, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGSTOP, SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
 }
 
 // Wrapper around fgets to replace ending \n by \0.
