@@ -17,6 +17,7 @@
 #define FALSE 0
 #define LENGTH 16
 #define MAX_PASS_AGE 10
+#define MAX_LOGIN_ATTEMPTS 5
 
 void sighandler() {
 
@@ -68,6 +69,12 @@ int main(int argc, char *argv[]) {
 		if (passwddata != NULL) {
 			// Ask for password, encrypt with salt
 			c_pass = crypt(getpass("Password: "), passwddata->passwd_salt);
+
+			// Prevent bruteforcing
+			if(passwddata->pwfailed > MAX_LOGIN_ATTEMPTS) {
+				printf("Too many failed attempts, account is locked!\n");
+				continue;
+			}
 
 			if (strcmp(c_pass, passwddata->passwd) == 0) {
 				printf("You're in !\n");
