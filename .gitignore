@@ -2,6 +2,9 @@
 login_linux
 makepass
 
+# Linux backup
+*~
+
 # Object files
 *.o
 *.ko

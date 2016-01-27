@@ -20,13 +20,16 @@
 #define MAX_LOGIN_ATTEMPTS 5
 
 void sighandler() {
-	// Catch (some) termination signals
-	signal(SIGHUP, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-	signal(SIGTERM, SIG_IGN);
-	signal(SIGSTOP, SIG_IGN);
-	signal(SIGTSTP, SIG_IGN);
+	// Catch (some) termination signal
+	if(signal(SIGINT, SIG_IGN) == SIG_ERR) {
+		exit(EXIT_ERROR);
+	}
+	if(signal(SIGQUIT, SIG_IGN) == SIG_ERR) {
+		exit(EXIT_ERROR);
+	}
+	if(signal(SIGTSTP, SIG_IGN) == SIG_ERR) {
+		exit(EXIT_ERROR);
+	}
 }
 
 // Wrapper around fgets to replace ending \n by \0.
@@ -50,6 +53,9 @@ int main(int argc, char *argv[]) {
 	char user[LENGTH];
 	char *c_pass;
 
+	char *shellargv[] = {NULL};
+	char *shellenv[] = {NULL};
+
 	sighandler();
 
 	while (TRUE) {
@@ -62,7 +68,8 @@ int main(int argc, char *argv[]) {
 		__fpurge(stdin); /* Purge any data in stdin buffer */
 
 		if(fgets_wrapper(user, LENGTH, stdin) == 0)
-			exit(0);
+			exit(EXIT_SUCCESS);
+
 
 		/* check to see if important variable is intact after input of login name - do not remove */
 		printf("Value of variable 'important' after input of login name: %*.*s\n",
@@ -73,6 +80,8 @@ int main(int argc, char *argv[]) {
 		if (passwddata != NULL) {
 			// Ask for password, encrypt with salt
 			c_pass = crypt(getpass("Password: "), passwddata->passwd_salt);
+
+			if(c_pass == NULL) exit(EXIT_ERROR);
 
 			// Prevent bruteforcing
 			if(passwddata->pwfailed > MAX_LOGIN_ATTEMPTS) {
@@ -96,14 +105,19 @@ int main(int argc, char *argv[]) {
 				// Store the updated entry
 				if(mysetpwent(user, passwddata) != 0) {
 					printf("Something went wrong saving passwddata!");
-					return -1;
+					exit(EXIT_FAILURE);
 				}
 
-				/*  check UID, see setuid(2) */
-				/*  start a shell, use execve(2) */
+				// Set uid
+				if(setuid(passwddata->uid) != 0) {
+					exit(EXIT_FAILURE);
+				}
 
-				return 0;
+				// Start shell
+				execve("/bin/sh", shellargv, shellenv);
 
+				// execve only returns on failure
+				exit(EXIT_FAILURE);
 			} else {
 				// Increase no_of_failed_attempts
 				passwddata->pwfailed++;
@@ -111,12 +125,12 @@ int main(int argc, char *argv[]) {
 				// Store the updated entry
 				if(mysetpwent(user, passwddata) != 0) {
 					printf("Something went wrong saving passwddata!");
-					return -1;
+					exit(EXIT_FAILURE);
 				}
 			}
 		}
 		printf("Login Incorrect \n");
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
