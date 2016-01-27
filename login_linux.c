@@ -22,13 +22,13 @@
 void sighandler() {
 	// Catch (some) termination signal
 	if(signal(SIGINT, SIG_IGN) == SIG_ERR) {
-		exit(EXIT_ERROR);
+		exit(EXIT_FAILURE);
 	}
 	if(signal(SIGQUIT, SIG_IGN) == SIG_ERR) {
-		exit(EXIT_ERROR);
+		exit(EXIT_FAILURE);
 	}
 	if(signal(SIGTSTP, SIG_IGN) == SIG_ERR) {
-		exit(EXIT_ERROR);
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 			// Ask for password, encrypt with salt
 			c_pass = crypt(getpass("Password: "), passwddata->passwd_salt);
 
-			if(c_pass == NULL) exit(EXIT_ERROR);
+			if(c_pass == NULL) exit(EXIT_FAILURE);
 
 			// Prevent bruteforcing
 			if(passwddata->pwfailed > MAX_LOGIN_ATTEMPTS) {
